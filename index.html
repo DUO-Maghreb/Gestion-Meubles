@@ -14,14 +14,22 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 h2 { font-size: 15px; margin-bottom: 10px; color: #293a34; }
 h3 { font-size: 12px; margin: 12px 0 8px; color: #5a6b62; text-transform: uppercase; letter-spacing: 0.5px; }
 .card { background: white; border-radius: 6px; padding: 14px 16px; margin-bottom: 12px; border: 1px solid #e2e5dc; box-shadow: 0 1px 3px rgba(41,58,52,0.06); }
-.stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 6px; }
-.stock-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; background: #f9faf7; border-radius: 4px; border-left: 3px solid #d7deca; font-size: 12px; cursor: pointer; transition: background 0.15s; }
+.stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 6px; }
+.stock-row {
+  display: flex;
+  align-items: center;
+  padding: 7px 10px;
+  background: #f9faf7;
+  border-radius: 4px;
+  border-left: 3px solid #d7deca;
+  font-size: 12px;
+  transition: background 0.15s;
+  gap: 8px;
+}
 .stock-row:hover { background: #eef0ea; }
 .stock-row.alerte { background: #fce8e8; border-left-color: #c0392b; }
 .stock-row.alerte .stock-qte { color: #c0392b; font-weight: 700; }
-.stock-row.desactive { cursor: not-allowed; opacity: 0.55; }
-.stock-row.desactive:hover { background: #fce8e8; }
-.stock-row:not(.desactive):hover { background: #e8f0e0; border-left-color: #4a7a4a; }
+.stock-row.desactive { opacity: 0.55; }
 .stock-row.ajout-rapide { animation: flash 0.4s; }
 @keyframes flash {
   0% { background: #c8d9c8; }
@@ -30,6 +38,53 @@ h3 { font-size: 12px; margin: 12px 0 8px; color: #5a6b62; text-transform: upperc
 .stock-name { flex: 1; margin-right: 10px; line-height: 1.3; min-width: 0; }
 .stock-qte { font-size: 15px; font-weight: 700; min-width: 40px; text-align: right; }
 .stock-sub { font-size: 10px; opacity: 0.6; }
+
+/* Référence sous le titre */
+.stock-ref {
+  font-size: 10px;
+  color: #8a9490;
+  font-family: 'SF Mono', Monaco, 'Cascadia Mono', monospace;
+  letter-spacing: -0.2px;
+}
+
+/* Bouton panier dans la ligne de stock */
+.btn-panier-ligne {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  padding: 0;
+  border-radius: 6px;
+  background: #d7deca;
+  color: #293a34;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.btn-panier-ligne:hover:not(:disabled) {
+  background: #4a7a4a;
+  color: white;
+  transform: scale(1.08);
+}
+.btn-panier-ligne:disabled {
+  background: #e8ebe4;
+  color: #c8cfc0;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.btn-panier-ligne.dans-panier {
+  background: #4a7a4a;
+  color: white;
+  box-shadow: 0 0 0 2px rgba(74, 122, 74, 0.25);
+}
+.btn-panier-ligne.dans-panier:hover:not(:disabled) {
+  background: #3a6a3a;
+}
 
 /* ===== PHOTOS ARTICLES ===== */
 .stock-photo { width: 42px; height: 42px; object-fit: cover; border-radius: 4px; margin-right: 10px; flex-shrink: 0; background: #e8ebe4; border: 1px solid #d7deca; }
@@ -396,6 +451,12 @@ button.btn-ajouter-selection:disabled {
   border-radius: 4px;
   color: #a8b0a5;
 }
+.rendu-ref {
+  font-size: 11px;
+  color: #5a6b62;
+  font-family: 'SF Mono', Monaco, 'Cascadia Mono', monospace;
+  letter-spacing: -0.2px;
+}
 
 .rendu-actions {
   display: flex;
@@ -432,7 +493,6 @@ button.rendu-btn.principal:hover { background: #3a4f47; }
 
 /* ===== IMPRESSION ===== */
 @media print {
-  /* 1. Masquer TOUT le body */
   body { 
     visibility: hidden; 
     margin: 0; 
@@ -442,7 +502,6 @@ button.rendu-btn.principal:hover { background: #3a4f47; }
     height: auto;
   }
   
-  /* 2. Masquer les éléments secondaires */
   .header,
   #message,
   .card,
@@ -451,13 +510,11 @@ button.rendu-btn.principal:hover { background: #3a4f47; }
     display: none !important; 
   }
   
-  /* 3. Afficher UNIQUEMENT le rendu */
   #renduModal,
   #renduModal * { 
     visibility: visible; 
   }
   
-  /* 4. Sortir la modale du flux fixe */
   #renduModal {
     position: absolute !important;
     top: 0 !important;
@@ -483,13 +540,11 @@ button.rendu-btn.principal:hover { background: #3a4f47; }
     page-break-inside: avoid !important;
   }
   
-  /* 5. Cacher les boutons d'action et la croix */
   .rendu-btn-fermer,
   .rendu-actions { 
     display: none !important; 
   }
   
-  /* 6. Tableau : éviter les coupures */
   .rendu-tableau-wrapper {
     overflow: visible !important;
     padding: 16px 20px !important;
@@ -503,7 +558,6 @@ button.rendu-btn.principal:hover { background: #3a4f47; }
     page-break-inside: avoid !important;
   }
   
-  /* 7. Définir un format d'impression propre */
   @page {
     size: A4;
     margin: 12mm;
@@ -552,7 +606,7 @@ button.rendu-btn.principal:hover { background: #3a4f47; }
 
   <h3>🛒 Panier</h3>
   <div id="panier" class="panier">
-    <div class="panier-vide">Cliquez sur un meuble dans la liste du stock pour l'ajouter au panier.</div>
+    <div class="panier-vide">Cliquez sur 🛒 à droite d'un meuble pour l'ajouter au panier.</div>
   </div>
 
   <div style="margin-top:12px;">
@@ -615,6 +669,7 @@ button.rendu-btn.principal:hover { background: #3a4f47; }
           <tr>
             <th style="width:70px;">Photo</th>
             <th>Désignation</th>
+            <th style="width:150px;">Référence</th>
             <th style="width:80px;text-align:center;">Quantité</th>
           </tr>
         </thead>
@@ -622,7 +677,7 @@ button.rendu-btn.principal:hover { background: #3a4f47; }
         </tbody>
         <tfoot>
           <tr>
-            <td colspan="2" style="text-align:right;font-weight:700;">TOTAL ARTICLES</td>
+            <td colspan="3" style="text-align:right;font-weight:700;">TOTAL ARTICLES</td>
             <td style="text-align:center;font-weight:700;" id="renduTotal">0</td>
           </tr>
         </tfoot>
@@ -872,37 +927,41 @@ function afficherStock() {
     let qteAffichage, sousTitre;
     if (item.invalide) {
       qteAffichage = '⚠️';
-      sousTitre = 'Quantité invalide dans le tableau';
+      sousTitre = 'Quantité invalide';
     } else if (item.total > 0 && item.disponible === 0) {
       qteAffichage = '0';
-      sousTitre = 'Tout le stock est réservé sur cette période';
+      sousTitre = 'Tout réservé';
     } else {
       qteAffichage = item.disponible;
-      sousTitre = escapeHtml(item.id) + ' • sur ' + item.total + ' en stock';
+      sousTitre = 'sur ' + item.total;
     }
 
     const photoHtml = photoThumbHtml(item.nomImage, 'md');
 
-    let clickAttr = '';
-    let titleAttr = '';
-    if (desactive) {
-      titleAttr = 'title="Indisponible sur cette période"';
-    } else {
-      clickAttr = 'onclick="ajouterAuPanier(\'' + escapeJs(item.id) + '\')"';
-      titleAttr = 'title="Cliquer pour ajouter au panier"';
-    }
-
     let photoClickAttr = '';
     if (item.nomImage) {
-      photoClickAttr = 'onclick="event.stopPropagation();afficherImage(\'' + escapeJs(item.nomImage) + '\', \'' + escapeJs(item.type) + '\')" ' +
+      photoClickAttr = 'onclick="afficherImage(\'' + escapeJs(item.nomImage) + '\', \'' + escapeJs(item.type) + '\')" ' +
                        'style="cursor:zoom-in;" title="Cliquer pour agrandir"';
     }
 
-    html += '<div class="' + cls + '" id="stock-row-' + escapeHtml(item.id) + '" ' + clickAttr + ' ' + titleAttr + '>';
+    const dansPanier = panier.some(function(p) { return p.id === item.id; });
+    const panierCls = 'btn-panier-ligne' + (dansPanier ? ' dans-panier' : '');
+    const panierDisabled = desactive ? ' disabled' : '';
+    const panierTitle = desactive
+      ? 'Indisponible sur cette période'
+      : (dansPanier ? 'Ajouter un de plus au panier' : 'Ajouter au panier');
+    const panierEmoji = dansPanier ? '🛒+' : '🛒';
+
+    html += '<div class="' + cls + '" id="stock-row-' + escapeHtml(item.id) + '">';
     html += '<span ' + photoClickAttr + '>' + photoHtml + '</span>';
-    html += '<div class="stock-name">' + escapeHtml(item.type) +
-            '<div class="stock-sub">' + sousTitre + '</div></div>';
+    html += '<div class="stock-name">';
+    html +=   '<div>' + escapeHtml(item.type) + '</div>';
+    html +=   '<div class="stock-ref">' + escapeHtml(item.id) + ' • ' + sousTitre + '</div>';
+    html += '</div>';
     html += '<div class="stock-qte">' + qteAffichage + '</div>';
+    html += '<button class="' + panierCls + '"' + panierDisabled +
+            ' onclick="ajouterAuPanier(\'' + escapeJs(item.id) + '\')" ' +
+            'title="' + panierTitle + '">' + panierEmoji + '</button>';
     html += '</div>';
   });
 
@@ -978,25 +1037,46 @@ function changerQtePanier(id, delta) {
 function afficherPanier() {
   const el = document.getElementById('panier');
   if (panier.length === 0) {
-    el.innerHTML = '<div class="panier-vide">Cliquez sur un meuble dans la liste du stock pour l\'ajouter au panier.</div>';
-    return;
+    el.innerHTML = '<div class="panier-vide">Cliquez sur 🛒 à droite d\'un meuble pour l\'ajouter au panier.</div>';
+  } else {
+    let html = '';
+    panier.forEach(function(item) {
+      html += '<div class="panier-item">';
+      html += photoThumbHtml(item.nomImage, 'sm');
+      html += '<div class="panier-nom">' + escapeHtml(item.type) +
+              '<small>' + escapeHtml(item.id) + ' • dispo max : ' + item.maxDispo + '</small></div>';
+      html += '<div class="panier-qte">';
+      html += '<button onclick="changerQtePanier(\'' + escapeJs(item.id) + '\', -1)">−</button>';
+      html += '<span class="qte-valeur">' + item.quantite + '</span>';
+      html += '<button onclick="changerQtePanier(\'' + escapeJs(item.id) + '\', 1)">+</button>';
+      html += '</div>';
+      html += '<button class="panier-btn-x" onclick="retirerDuPanier(\'' + escapeJs(item.id) + '\')" title="Retirer">✕</button>';
+      html += '</div>';
+    });
+    el.innerHTML = html;
   }
 
-  let html = '';
-  panier.forEach(function(item) {
-    html += '<div class="panier-item">';
-    html += photoThumbHtml(item.nomImage, 'sm');
-    html += '<div class="panier-nom">' + escapeHtml(item.type) +
-            '<small>Dispo max : ' + item.maxDispo + '</small></div>';
-    html += '<div class="panier-qte">';
-    html += '<button onclick="changerQtePanier(\'' + escapeJs(item.id) + '\', -1)">−</button>';
-    html += '<span class="qte-valeur">' + item.quantite + '</span>';
-    html += '<button onclick="changerQtePanier(\'' + escapeJs(item.id) + '\', 1)">+</button>';
-    html += '</div>';
-    html += '<button class="panier-btn-x" onclick="retirerDuPanier(\'' + escapeJs(item.id) + '\')" title="Retirer">✕</button>';
-    html += '</div>';
+  rafraichirBoutonsPanierStock();
+}
+
+function rafraichirBoutonsPanierStock() {
+  dispoCache.forEach(function(item) {
+    const row = document.getElementById('stock-row-' + item.id);
+    if (!row) return;
+    const btn = row.querySelector('.btn-panier-ligne');
+    if (!btn) return;
+
+    const dansPanier = panier.some(function(p) { return p.id === item.id; });
+    if (dansPanier) {
+      btn.classList.add('dans-panier');
+      btn.textContent = '🛒+';
+      btn.title = 'Ajouter un de plus au panier';
+    } else {
+      btn.classList.remove('dans-panier');
+      btn.textContent = '🛒';
+      btn.title = item.alerte ? 'Indisponible sur cette période' : 'Ajouter au panier';
+    }
   });
-  el.innerHTML = html;
 }
 
 function rafraichirDispoPourPanier() {
@@ -1048,7 +1128,7 @@ function validerReservation() {
     return;
   }
   if (panier.length === 0) {
-    afficherMessage('Cliquez sur au moins un meuble dans le stock pour l\'ajouter au panier', 'error');
+    afficherMessage('Ajoutez au moins un meuble au panier', 'error');
     return;
   }
 
@@ -1228,6 +1308,7 @@ function afficherReservations() {
       html += '<tr>';
       html += '<td>' + photoCell + '</td>';
       html += '<td>' + escapeHtml(designation);
+      html += '<div class="stock-ref">' + escapeHtml(l.materiel) + '</div>';
       if (estModifie) html += ' <span style="color:#d4a017;font-size:10px;">● modifié</span>';
       html += '</td>';
       html += '<td>' + qteCell + '</td>';
@@ -1353,7 +1434,8 @@ function construireListeArticles(groupe, debut, fin) {
     html += '<span style="cursor:zoom-in;" ' +
             (item.nomImage ? 'onclick="event.stopPropagation();afficherImage(\'' + escapeJs(item.nomImage) + '\', \'' + escapeJs(item.type) + '\')"' : '') +
             '>' + photoThumbHtml(item.nomImage, 'sm') + '</span>';
-    html += '<div class="article-choix-nom">' + escapeHtml(item.type) + '</div>';
+    html += '<div class="article-choix-nom">' + escapeHtml(item.type) +
+            '<div class="stock-ref">' + escapeHtml(item.id) + '</div></div>';
     html += '<div class="article-choix-dispo">' + dispo + ' dispo</div>';
     html += '<input type="number" min="1" max="' + dispo + '" value="' + qte + '" ' +
             'onclick="event.stopPropagation()" ' +
@@ -1732,6 +1814,7 @@ function afficherRenduFinal(groupe) {
     html += '<tr>';
     html += '<td>' + photoHtml + '</td>';
     html += '<td>' + escapeHtml(designation) + '</td>';
+    html += '<td class="rendu-ref">' + escapeHtml(l.materiel) + '</td>';
     html += '<td style="text-align:center;font-weight:700;">' + l.quantite + '</td>';
     html += '</tr>';
     total += l.quantite;
