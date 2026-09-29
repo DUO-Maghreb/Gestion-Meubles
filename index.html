@@ -144,6 +144,26 @@ button.btn-rendu:hover { background: #8a7629; }
 .dates-verrouillees .hint { color: #8a9490; font-style: italic; font-size: 11px; }
 .dates-verrouillees.invalide { background: #fce8e8; border-color: #c0392b; color: #842029; }
 
+/* ===== RAPPEL DE MONTAGE (inline) ===== */
+.rappel-montage {
+  display: none;
+  margin-top: 6px;
+  padding: 6px 10px;
+  background: #f5edd7;
+  border-left: 3px solid #d4a017;
+  border-radius: 3px;
+  font-size: 11px;
+  color: #7a5b1a;
+  line-height: 1.4;
+  animation: fadeIn 0.2s;
+}
+.rappel-montage.visible {
+  display: block;
+}
+.rappel-montage strong {
+  color: #5a3f0f;
+}
+
 /* ===== PANIER ===== */
 .panier { background: #f9faf7; border: 1px solid #d7deca; border-radius: 4px; padding: 10px; min-height: 50px; margin-bottom: 10px; }
 .panier-vide { color: #a8b0a5; font-size: 12px; font-style: italic; text-align: center; padding: 8px 0; }
@@ -583,6 +603,9 @@ button.rendu-btn.principal:hover { background: #3a4f47; }
       <button class="small" onclick="chargerStock()" style="margin-left:6px;">Vérifier</button>
     </span>
   </h2>
+  <div class="rappel-montage" id="rappelMontage">
+    ⚠️ <strong>Rappel :</strong> La date de début inclut le <strong>jour de montage</strong>. Le matériel doit être livré et installé ce jour-là.
+  </div>
   <input type="text" class="recherche-stock" id="rechercheStock" placeholder="🔍 Rechercher un meuble..." oninput="afficherStock()">
   <div id="stockGrid" class="stock-grid">
     <div class="loading"><span class="spinner"></span>Chargement...</div>
@@ -713,6 +736,7 @@ let modificationsEnCours = {};
 let selectionEnCours = {};
 let renduGroupeActuel = null;
 let derniereDateDebut = "";
+let rappelTimer = null;
 
 /* ============================================================
    UTILITAIRES
@@ -871,7 +895,7 @@ function afficherDatesVerrouillees() {
 }
 
 /* ============================================================
-   CONFIRMATION DATE DE DÉBUT (rappel montage)
+   RAPPEL DATE DE DÉBUT (bandeau inline sous les dates)
    ============================================================ */
 function confirmerDateDebut() {
   const input = document.getElementById('dateVerifDebut');
@@ -884,22 +908,28 @@ function confirmerDateDebut() {
     return;
   }
 
-  // Confirmation utilisateur
-  const message =
-    '⚠️  RAPPEL IMPORTANT\n' +
-    '─────────────────────────────\n\n' +
-    'La date de début inclut le jour de MONTAGE.\n' +
-    '📅 Date choisie : ' + nouvelleDate + '\n' +
-    '→ Le matériel doit être livré et installé\n' +
-    '   à cette date.\n' +
-    'Confirmez-vous cette date ?';
+  // Mémoriser la nouvelle date
+  derniereDateDebut = nouvelleDate;
 
-  if (confirm(message)) {
-    derniereDateDebut = nouvelleDate;
-    rafraichirDispoPourPanier();
-  } else {
-    input.value = derniereDateDebut;
-  }
+  // Afficher le bandeau de rappel
+  afficherRappelMontage();
+
+  // Rafraîchir la dispo
+  rafraichirDispoPourPanier();
+}
+
+function afficherRappelMontage() {
+  const el = document.getElementById('rappelMontage');
+  if (!el) return;
+
+  el.classList.add('visible');
+
+  if (rappelTimer) clearTimeout(rappelTimer);
+
+  // Disparaît après 8 secondes
+  rappelTimer = setTimeout(function() {
+    el.classList.remove('visible');
+  }, 8000);
 }
 
 /* ============================================================
