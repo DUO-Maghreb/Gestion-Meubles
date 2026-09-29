@@ -577,7 +577,7 @@ button.rendu-btn.principal:hover { background: #3a4f47; }
 <div class="card">
   <h2>📦 Stock disponible
     <span style="font-size:11px;color:#5a6b62;font-weight:400;margin-left:8px;">
-      <input type="date" id="dateVerifDebut" style="width:130px;display:inline-block;padding:4px 6px;font-size:11px;" onchange="rafraichirDispoPourPanier()">
+      <input type="date" id="dateVerifDebut" style="width:130px;display:inline-block;padding:4px 6px;font-size:11px;" onchange="confirmerDateDebut()">
       →
       <input type="date" id="dateVerifFin" style="width:130px;display:inline-block;padding:4px 6px;font-size:11px;" onchange="rafraichirDispoPourPanier()">
       <button class="small" onclick="chargerStock()" style="margin-left:6px;">Vérifier</button>
@@ -712,6 +712,7 @@ let panier = [];
 let modificationsEnCours = {};
 let selectionEnCours = {};
 let renduGroupeActuel = null;
+let derniereDateDebut = "";
 
 /* ============================================================
    UTILITAIRES
@@ -866,6 +867,38 @@ function afficherDatesVerrouillees() {
   } else {
     el.textContent = 'Dates non définies';
     box.classList.add('invalide');
+  }
+}
+
+/* ============================================================
+   CONFIRMATION DATE DE DÉBUT (rappel montage)
+   ============================================================ */
+function confirmerDateDebut() {
+  const input = document.getElementById('dateVerifDebut');
+  const nouvelleDate = input.value;
+
+  // Pas de changement ou champ vidé → on laisse passer
+  if (!nouvelleDate || nouvelleDate === derniereDateDebut) {
+    derniereDateDebut = nouvelleDate;
+    rafraichirDispoPourPanier();
+    return;
+  }
+
+  // Confirmation utilisateur
+  const message =
+    '⚠️  RAPPEL IMPORTANT\n' +
+    '─────────────────────────────\n\n' +
+    'La date de début inclut le jour de MONTAGE.\n\n' +
+    '📅 Date choisie : ' + nouvelleDate + '\n\n' +
+    '→ Le matériel doit être livré et installé\n' +
+    '   à cette date.\n\n' +
+    'Confirmez-vous cette date ?';
+
+  if (confirm(message)) {
+    derniereDateDebut = nouvelleDate;
+    rafraichirDispoPourPanier();
+  } else {
+    input.value = derniereDateDebut;
   }
 }
 
@@ -1844,6 +1877,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const auj = aujourdhui();
   document.getElementById('dateVerifDebut').value = auj;
   document.getElementById('dateVerifFin').value = auj;
+  derniereDateDebut = auj;
   afficherDatesVerrouillees();
   chargerStock();
   chargerReservations();
