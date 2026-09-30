@@ -757,6 +757,7 @@ function afficherMessage(texte, type) {
   if (type === 'error') window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// Échappement pour affichage dans le CONTENU HTML (entre balises)
 function escapeHtml(s) {
   return String(s || "")
     .replace(/&/g, "&amp;")
@@ -766,12 +767,23 @@ function escapeHtml(s) {
     .replace(/'/g, "&#39;");
 }
 
-function escapeJs(s) {
-  return String(s || "")
+// 🆕 Échappement pour chaîne JS placée dans un ATTRIBUT HTML (onclick="...")
+// (échappe d'abord pour JavaScript, puis pour HTML)
+function escapeJsAttr(s) {
+  // 1. Échapper pour JS
+  let js = String(s || "")
     .replace(/\\/g, "\\\\")
     .replace(/'/g, "\\'")
     .replace(/"/g, '\\"')
-    .replace(/\n/g, "\\n");
+    .replace(/\n/g, "\\n")
+    .replace(/\r/g, "\\r")
+    .replace(/\t/g, "\\t");
+  // 2. Échapper pour HTML (les " et & doivent être encodés)
+  return js
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 /* ============================================================
@@ -895,26 +907,20 @@ function afficherDatesVerrouillees() {
 }
 
 /* ============================================================
-   RAPPEL DATE DE DÉBUT (bandeau inline sous les dates)
+   RAPPEL DATE DE DÉBUT
    ============================================================ */
 function confirmerDateDebut() {
   const input = document.getElementById('dateVerifDebut');
   const nouvelleDate = input.value;
 
-  // Pas de changement ou champ vidé → on laisse passer
   if (!nouvelleDate || nouvelleDate === derniereDateDebut) {
     derniereDateDebut = nouvelleDate;
     rafraichirDispoPourPanier();
     return;
   }
 
-  // Mémoriser la nouvelle date
   derniereDateDebut = nouvelleDate;
-
-  // Afficher le bandeau de rappel
   afficherRappelMontage();
-
-  // Rafraîchir la dispo
   rafraichirDispoPourPanier();
 }
 
@@ -926,7 +932,6 @@ function afficherRappelMontage() {
 
   if (rappelTimer) clearTimeout(rappelTimer);
 
-  // Disparaît après 8 secondes
   rappelTimer = setTimeout(function() {
     el.classList.remove('visible');
   }, 8000);
@@ -1001,9 +1006,10 @@ function afficherStock() {
 
     const photoHtml = photoThumbHtml(item.nomImage, 'md');
 
+    // ✅ CORRECTION : escapeJsAttr au lieu de escapeJs
     let photoClickAttr = '';
     if (item.nomImage) {
-      photoClickAttr = 'onclick="afficherImage(\'' + escapeJs(item.nomImage) + '\', \'' + escapeJs(item.type) + '\')" ' +
+      photoClickAttr = 'onclick="afficherImage(\'' + escapeJsAttr(item.nomImage) + '\', \'' + escapeJsAttr(item.type) + '\')" ' +
                        'style="cursor:zoom-in;" title="Cliquer pour agrandir"';
     }
 
@@ -1022,8 +1028,9 @@ function afficherStock() {
     html +=   '<div class="stock-ref">' + escapeHtml(item.id) + ' • ' + sousTitre + '</div>';
     html += '</div>';
     html += '<div class="stock-qte">' + qteAffichage + '</div>';
+    // ✅ CORRECTION : escapeJsAttr
     html += '<button class="' + panierCls + '"' + panierDisabled +
-            ' onclick="ajouterAuPanier(\'' + escapeJs(item.id) + '\')" ' +
+            ' onclick="ajouterAuPanier(\'' + escapeJsAttr(item.id) + '\')" ' +
             'title="' + panierTitle + '">' + panierEmoji + '</button>';
     html += '</div>';
   });
@@ -1108,12 +1115,13 @@ function afficherPanier() {
       html += photoThumbHtml(item.nomImage, 'sm');
       html += '<div class="panier-nom">' + escapeHtml(item.type) +
               '<small>' + escapeHtml(item.id) + ' • dispo max : ' + item.maxDispo + '</small></div>';
+      // ✅ CORRECTION : escapeJsAttr
       html += '<div class="panier-qte">';
-      html += '<button onclick="changerQtePanier(\'' + escapeJs(item.id) + '\', -1)">−</button>';
+      html += '<button onclick="changerQtePanier(\'' + escapeJsAttr(item.id) + '\', -1)">−</button>';
       html += '<span class="qte-valeur">' + item.quantite + '</span>';
-      html += '<button onclick="changerQtePanier(\'' + escapeJs(item.id) + '\', 1)">+</button>';
+      html += '<button onclick="changerQtePanier(\'' + escapeJsAttr(item.id) + '\', 1)">+</button>';
       html += '</div>';
-      html += '<button class="panier-btn-x" onclick="retirerDuPanier(\'' + escapeJs(item.id) + '\')" title="Retirer">✕</button>';
+      html += '<button class="panier-btn-x" onclick="retirerDuPanier(\'' + escapeJsAttr(item.id) + '\')" title="Retirer">✕</button>';
       html += '</div>';
     });
     el.innerHTML = html;
@@ -1315,14 +1323,15 @@ function afficherReservations() {
     html += '<td>' + totalAffiche + '</td><td>' + premiere.debut + '</td><td>' + premiere.fin + '</td>';
     html += '<td><span class="badge ' + badgeClass + '">' + escapeHtml(premiere.statut) + '</span></td>';
     html += '<td class="actions">';
-    html += '<button class="small btn-rendu" onclick="event.stopPropagation();afficherRenduFinal(\'' + escapeJs(g) + '\')">📄 Rendu final</button>';
+    // ✅ CORRECTION : escapeJsAttr
+    html += '<button class="small btn-rendu" onclick="event.stopPropagation();afficherRenduFinal(\'' + escapeJsAttr(g) + '\')">📄 Rendu final</button>';
     if (premiere.statut === 'Réservé') {
-      html += '<button class="small success" onclick="event.stopPropagation();changerStatutGroupe(\'' + escapeJs(g) + '\', \'Confirmé\')">Confirmer</button>';
-      html += '<button class="small danger" onclick="event.stopPropagation();changerStatutGroupe(\'' + escapeJs(g) + '\', \'Annulé\')">Annuler</button>';
+      html += '<button class="small success" onclick="event.stopPropagation();changerStatutGroupe(\'' + escapeJsAttr(g) + '\', \'Confirmé\')">Confirmer</button>';
+      html += '<button class="small danger" onclick="event.stopPropagation();changerStatutGroupe(\'' + escapeJsAttr(g) + '\', \'Annulé\')">Annuler</button>';
     } else if (premiere.statut === 'Confirmé') {
-      html += '<button class="small danger" onclick="event.stopPropagation();changerStatutGroupe(\'' + escapeJs(g) + '\', \'Annulé\')">Annuler</button>';
+      html += '<button class="small danger" onclick="event.stopPropagation();changerStatutGroupe(\'' + escapeJsAttr(g) + '\', \'Annulé\')">Annuler</button>';
     } else if (premiere.statut === 'Terminé') {
-      html += '<button class="small success" onclick="event.stopPropagation();validerRetour(\'' + escapeJs(g) + '\')">✅ Valider le retour</button>';
+      html += '<button class="small success" onclick="event.stopPropagation();validerRetour(\'' + escapeJsAttr(g) + '\')">✅ Valider le retour</button>';
     }
     html += '</td></tr>';
 
@@ -1344,16 +1353,18 @@ function afficherReservations() {
 
       const dispoInfo = calculerMargeGroupe(l.materiel, premiere.debut, premiere.fin, g);
 
+      // ✅ CORRECTION : escapeJsAttr
       let photoCell = '<span style="cursor:zoom-in;" ' +
-        (nomImg ? 'onclick="event.stopPropagation();afficherImage(\'' + escapeJs(nomImg) + '\', \'' + escapeJs(designation) + '\')"' : '') +
+        (nomImg ? 'onclick="event.stopPropagation();afficherImage(\'' + escapeJsAttr(nomImg) + '\', \'' + escapeJsAttr(designation) + '\')"' : '') +
         '>' + photoThumbHtml(nomImg, 'md') + '</span>';
 
       let qteCell;
       if (modifiable) {
+        // ✅ CORRECTION : escapeJsAttr
         qteCell = '<div class="qte-edit">' +
-          '<button onclick="event.stopPropagation();modifierQteResa(\'' + escapeJs(g) + '\', \'' + escapeJs(l.materiel) + '\', -1)">−</button>' +
+          '<button onclick="event.stopPropagation();modifierQteResa(\'' + escapeJsAttr(g) + '\', \'' + escapeJsAttr(l.materiel) + '\', -1)">−</button>' +
           '<span class="qte-valeur">' + nouvelleQte + '</span>' +
-          '<button onclick="event.stopPropagation();modifierQteResa(\'' + escapeJs(g) + '\', \'' + escapeJs(l.materiel) + '\', 1)">+</button>' +
+          '<button onclick="event.stopPropagation();modifierQteResa(\'' + escapeJsAttr(g) + '\', \'' + escapeJsAttr(l.materiel) + '\', 1)">+</button>' +
           '</div>';
       } else {
         qteCell = nouvelleQte;
@@ -1377,8 +1388,9 @@ function afficherReservations() {
       html += '<td>' + qteCell + '</td>';
       html += '<td>' + dispoCell + '</td>';
       if (modifiable) {
+        // ✅ CORRECTION : escapeJsAttr
         html += '<td><button class="btn-del-line" title="Retirer cet article" ' +
-                'onclick="event.stopPropagation();supprimerLigneResa(\'' + escapeJs(g) + '\', \'' + escapeJs(l.materiel) + '\')">✕</button></td>';
+                'onclick="event.stopPropagation();supprimerLigneResa(\'' + escapeJsAttr(g) + '\', \'' + escapeJsAttr(l.materiel) + '\')">✕</button></td>';
       }
       html += '</tr>';
     });
@@ -1392,27 +1404,31 @@ function afficherReservations() {
 
     if (modifiable && aDesModifs) {
       html += '<div style="margin-top:10px;display:flex;gap:8px;align-items:center;">';
-      html += '<button class="btn-valider" onclick="event.stopPropagation();validerModifications(\'' + escapeJs(g) + '\')">💾 Valider les modifications</button>';
-      html += '<button class="small" style="background:#a8b0a5;color:white;width:auto;padding:6px 12px;" onclick="event.stopPropagation();annulerModifications(\'' + escapeJs(g) + '\')">Annuler</button>';
+      // ✅ CORRECTION : escapeJsAttr
+      html += '<button class="btn-valider" onclick="event.stopPropagation();validerModifications(\'' + escapeJsAttr(g) + '\')">💾 Valider les modifications</button>';
+      html += '<button class="small" style="background:#a8b0a5;color:white;width:auto;padding:6px 12px;" onclick="event.stopPropagation();annulerModifications(\'' + escapeJsAttr(g) + '\')">Annuler</button>';
       html += '</div>';
     }
 
     if (modifiable) {
       html += '<div class="selecteur-articles" id="sel-' + g + '" style="display:none;">';
       html += '<h4>➕ Ajouter des articles</h4>';
-      html += '<input type="text" placeholder="🔍 Rechercher..." oninput="filtrerArticlesSelecteur(\'' + escapeJs(g) + '\', this.value)" onclick="event.stopPropagation()">';
+      // ✅ CORRECTION : escapeJsAttr
+      html += '<input type="text" placeholder="🔍 Rechercher..." oninput="filtrerArticlesSelecteur(\'' + escapeJsAttr(g) + '\', this.value)" onclick="event.stopPropagation()">';
       html += '<div class="liste-articles" id="liste-' + g + '">';
       html += construireListeArticles(g, premiere.debut, premiere.fin);
       html += '</div>';
       html += '<div class="barre-actions-selecteur">';
       html += '<span class="compteur-selection" id="compteur-' + g + '">Aucun article sélectionné</span>';
       html += '<div style="display:flex;gap:8px;">';
-      html += '<button class="small" style="background:#a8b0a5;color:white;width:auto;padding:8px 16px;" onclick="event.stopPropagation();fermerSelecteur(\'' + escapeJs(g) + '\')">Fermer</button>';
-      html += '<button class="btn-ajouter-selection" id="btn-ajout-sel-' + g + '" disabled onclick="event.stopPropagation();validerSelectionArticles(\'' + escapeJs(g) + '\')">➕ Ajouter la sélection</button>';
+      // ✅ CORRECTION : escapeJsAttr
+      html += '<button class="small" style="background:#a8b0a5;color:white;width:auto;padding:8px 16px;" onclick="event.stopPropagation();fermerSelecteur(\'' + escapeJsAttr(g) + '\')">Fermer</button>';
+      html += '<button class="btn-ajouter-selection" id="btn-ajout-sel-' + g + '" disabled onclick="event.stopPropagation();validerSelectionArticles(\'' + escapeJsAttr(g) + '\')">➕ Ajouter la sélection</button>';
       html += '</div>';
       html += '</div>';
       html += '</div>';
-      html += '<button class="small success" id="btn-open-sel-' + g + '" style="width:auto;padding:6px 12px;margin-top:8px;" onclick="event.stopPropagation();ouvrirSelecteur(\'' + escapeJs(g) + '\')">➕ Ajouter un article</button>';
+      // ✅ CORRECTION : escapeJsAttr
+      html += '<button class="small success" id="btn-open-sel-' + g + '" style="width:auto;padding:6px 12px;margin-top:8px;" onclick="event.stopPropagation();ouvrirSelecteur(\'' + escapeJsAttr(g) + '\')">➕ Ajouter un article</button>';
     }
 
     html += '</td></tr>';
@@ -1491,18 +1507,19 @@ function construireListeArticles(groupe, debut, fin) {
     const coche = sel && sel.coche;
     const qte = sel ? sel.qte : 1;
 
+    // ✅ CORRECTION : escapeJsAttr pour tous les onclick
     html += '<div class="article-choix' + (coche ? ' selectionne' : '') + '" id="choix-' + groupe + '-' + escapeHtml(item.id) + '">';
     html += '<input type="checkbox" ' + (coche ? 'checked' : '') +
-            ' onclick="event.stopPropagation();toggleSelection(\'' + escapeJs(groupe) + '\', \'' + escapeJs(item.id) + '\')">';
+            ' onclick="event.stopPropagation();toggleSelection(\'' + escapeJsAttr(groupe) + '\', \'' + escapeJsAttr(item.id) + '\')">';
     html += '<span style="cursor:zoom-in;" ' +
-            (item.nomImage ? 'onclick="event.stopPropagation();afficherImage(\'' + escapeJs(item.nomImage) + '\', \'' + escapeJs(item.type) + '\')"' : '') +
+            (item.nomImage ? 'onclick="event.stopPropagation();afficherImage(\'' + escapeJsAttr(item.nomImage) + '\', \'' + escapeJsAttr(item.type) + '\')"' : '') +
             '>' + photoThumbHtml(item.nomImage, 'sm') + '</span>';
     html += '<div class="article-choix-nom">' + escapeHtml(item.type) +
             '<div class="stock-ref">' + escapeHtml(item.id) + '</div></div>';
     html += '<div class="article-choix-dispo">' + dispo + ' dispo</div>';
     html += '<input type="number" min="1" max="' + dispo + '" value="' + qte + '" ' +
             'onclick="event.stopPropagation()" ' +
-            'onchange="event.stopPropagation();setQteSelection(\'' + escapeJs(groupe) + '\', \'' + escapeJs(item.id) + '\', this.value)">';
+            'onchange="event.stopPropagation();setQteSelection(\'' + escapeJsAttr(groupe) + '\', \'' + escapeJsAttr(item.id) + '\', this.value)">';
     html += '</div>';
   });
 
@@ -1830,7 +1847,7 @@ function validerRetour(groupe) {
 }
 
 /* ============================================================
-   RENDU FINAL — Fiche partageable
+   RENDU FINAL
    ============================================================ */
 function afficherRenduFinal(groupe) {
   const lignes = reservationsCache.filter(function(r) {
